@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Loja - Produtos</title>
+  <style>
+    :root{
+      --bg:#f5f7fb; --card:#fff; --accent:#2b6cb0; --muted:#666;
+    }
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial; background:var(--bg); margin:0; color:#222;}
+    header{background:var(--accent); color:#fff; padding:18px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px;}
+    header h1{margin:0; font-size:1.1rem;}
+    header a{color:#fff; text-decoration:none; font-size:0.9rem; background:rgba(255,255,255,0.12); padding:6px 10px; border-radius:6px;}
+    .container{max-width:1100px; margin:28px auto; padding:0 18px;}
+    .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:18px;}
+    .card{background:var(--card); border-radius:10px; padding:12px; box-shadow:0 6px 18px rgba(0,0,0,0.06); display:flex; flex-direction:column; height:100%;}
+    .imgwrap{height:160px; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:8px; background:#fafafa; margin-bottom:10px;}
+    .imgwrap img{max-width:100%; max-height:100%; object-fit:contain;}
+    .title{font-weight:600; margin:0 0 6px 0; font-size:0.98rem;}
+    .price{color:var(--accent); font-weight:700; margin-bottom:8px;}
+    .actions{margin-top:auto; display:flex; gap:8px;}
+    .btn{flex:1; text-align:center; padding:10px 8px; border-radius:8px; text-decoration:none; color:#fff; background:var(--accent); display:inline-block;}
+    .btn.secondary{background:#6b7280;}
+    .empty{padding:40px; background:#fff; border-radius:10px; text-align:center; color:var(--muted);}
+    footer{max-width:1100px;margin:18px auto;padding:12px 18px;color:var(--muted);font-size:0.9rem;}
+    .meta{display:flex; gap:12px; align-items:center;}
+    @media (max-width:480px){ .imgwrap{height:120px;} header h1{font-size:1rem} }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Loja - Produtos</h1>
+    <div class="meta">
+      <a href="admin.html" title="Área do administrador">Área do administrador</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <div id="grid" class="grid"></div>
+
+    <div id="empty" class="empty" style="display:none;">
+      Nenhum produto disponível. Aguarde atualização ou entre em contato com o administrador.
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">Produtos carregados localmente (demo). Clique em "Comprar" para abrir o link no Shopee/Marketplace.</div>
+  </footer>
+
+<script>
+/*
+  Simple product viewer using localStorage.
+  Data format (array):
+  [
+    { id: "p1", title:"Nome", price:"R$ 50,00", image:"https://...", link:"https://shopee..." },
+    ...
+  ]
+*/
+
+const STORAGE_KEY = "loja_produtos_v1";
+
+function sampleIfEmpty(){
+  // apenas preenche com exemplo se não houver nada (apenas demo)
+  if(!localStorage.getItem(STORAGE_KEY)){
+    const sample = [
+      { id: "p1", title: "Sensor Ultrassônico HC-SR04", price: "R$ 35,00", image: "https://i.imgur.com/9z6b6Yq.jpg", link: "https://www.mercadolivre.com.br/" },
+      { id: "p2", title: "Placa Arduino Uno R3", price: "R$ 75,00", image: "https://i.imgur.com/0KXb0bD.jpg", link: "https://shopee.com.br/" }
+    ];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(sample));
+  }
+}
+
+function loadProducts(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(!raw) return [];
+  try { return JSON.parse(raw) || []; } catch(e){ console.error(e); return []; }
+}
+
+function buildCard(prod){
+  const div = document.createElement("div");
+  div.className = "card";
+  div.innerHTML = `
+    <div class="imgwrap"><img src="${escapeHtml(prod.image||'')}" alt="${escapeHtml(prod.title||'Produto')}"></div>
+    <div>
+      <p class="title">${escapeHtml(prod.title||'Sem título')}</p>
+      <p class="price">${escapeHtml(prod.price||'R$ 0,00')}</p>
+    </div>
+    <div class="actions">
+      <a class="btn" href="${escapeHtml(prod.link||'#')}" target="_blank" rel="noopener noreferrer">Comprar</a>
+      <a class="btn secondary" href="${escapeHtml(prod.link||'#')}" target="_blank" rel="noopener noreferrer">Ver no Marketplace</a>
+    </div>
+  `;
+  return div;
+}
+
+function render(){
+  sampleIfEmpty();
+  const grid = document.getElementById("grid");
+  const empty = document.getElementById("empty");
+  grid.innerHTML = "";
+  const products = loadProducts();
+  if(!products.length){
+    empty.style.display = "block";
+    return;
+  } else empty.style.display = "none";
+  products.forEach(p => grid.appendChild(buildCard(p)));
+}
+
+// basic escaper for values used inside attributes/text
+function escapeHtml(s){
+  if(!s) return "";
+  return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;");
+}
+
+window.addEventListener("load", render);
+</script>
+</body>
+</html>
